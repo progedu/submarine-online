@@ -5767,6 +5767,7 @@ var gameObj = {
     itemRadius: 4,
     airRadius: 5,
     deg: 0,
+    counter: 0,
     rotationDegreeByDirection: {
         'left': 0,
         'up': 270,
@@ -5820,6 +5821,8 @@ function ticker() {
     gameObj.ctxScore.clearRect(0, 0, gameObj.scoreCanvasWidth, gameObj.scoreCanvasHeight); // scoreCanvas もまっさら 
     drawAirTimer(gameObj.ctxScore, gameObj.myPlayerObj.airTime);
     drawMissiles(gameObj.ctxScore, gameObj.myPlayerObj.missilesMany);
+
+    gameObj.counter = (gameObj.counter + 1) % 10000;
 }
 setInterval(ticker, 33);
 
@@ -5949,36 +5952,89 @@ function getRadian(kakudo) {
 
 function drawMap(gameObj) {
 
-    // アイテムの描画
+    // 敵プレイヤーと NPC の描画
     var _iteratorNormalCompletion2 = true;
     var _didIteratorError2 = false;
     var _iteratorError2 = undefined;
 
     try {
-        for (var _iterator2 = gameObj.itemsMap[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+        for (var _iterator2 = gameObj.playersMap[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
             var _ref = _step2.value;
 
             var _ref2 = _slicedToArray(_ref, 2);
 
-            var index = _ref2[0];
-            var item = _ref2[1];
+            var key = _ref2[0];
+            var tekiPlayerObj = _ref2[1];
 
+            if (key === gameObj.myPlayerObj.playerId) {
+                continue;
+            } // 自分は描画しない
 
-            var distanceObj = calculationBetweenTwoPoints(gameObj.myPlayerObj.x, gameObj.myPlayerObj.y, item.x, item.y, gameObj.fieldWidth, gameObj.fieldHeight, gameObj.raderCanvasWidth, gameObj.raderCanvasHeight);
+            var distanceObj = calculationBetweenTwoPoints(gameObj.myPlayerObj.x, gameObj.myPlayerObj.y, tekiPlayerObj.x, tekiPlayerObj.y, gameObj.fieldWidth, gameObj.fieldHeight, gameObj.raderCanvasWidth, gameObj.raderCanvasHeight);
 
             if (distanceObj.distanceX <= gameObj.raderCanvasWidth / 2 && distanceObj.distanceY <= gameObj.raderCanvasHeight / 2) {
+
+                if (tekiPlayerObj.isAlive === false) {
+                    continue;
+                }
 
                 var degreeDiff = calcDegreeDiffFromRadar(gameObj.deg, distanceObj.degree);
                 var toumeido = calcOpacity(degreeDiff);
 
-                gameObj.ctxRader.fillStyle = 'rgba(255, 165, 0, ' + toumeido + ')';
+                var drawRadius = gameObj.counter % 12 + 2 + 12;
+                var clearRadius = drawRadius - 2;
+                var drawRadius2 = gameObj.counter % 12 + 2;
+                var clearRadius2 = drawRadius2 - 2;
+
+                gameObj.ctxRader.fillStyle = 'rgba(0, 0, 255, ' + toumeido + ')';
                 gameObj.ctxRader.beginPath();
-                gameObj.ctxRader.arc(distanceObj.drawX, distanceObj.drawY, gameObj.itemRadius, 0, Math.PI * 2, true);
+                gameObj.ctxRader.arc(distanceObj.drawX, distanceObj.drawY, drawRadius, 0, Math.PI * 2, true);
                 gameObj.ctxRader.fill();
+
+                gameObj.ctxRader.fillStyle = 'rgb(0, 20, 50)';
+                gameObj.ctxRader.beginPath();
+                gameObj.ctxRader.arc(distanceObj.drawX, distanceObj.drawY, clearRadius, 0, Math.PI * 2, true);
+                gameObj.ctxRader.fill();
+
+                gameObj.ctxRader.fillStyle = 'rgba(0, 0, 255, ' + toumeido + ')';
+                gameObj.ctxRader.beginPath();
+                gameObj.ctxRader.arc(distanceObj.drawX, distanceObj.drawY, drawRadius2, 0, Math.PI * 2, true);
+                gameObj.ctxRader.fill();
+
+                gameObj.ctxRader.fillStyle = 'rgb(0, 20, 50)';
+                gameObj.ctxRader.beginPath();
+                gameObj.ctxRader.arc(distanceObj.drawX, distanceObj.drawY, clearRadius2, 0, Math.PI * 2, true);
+                gameObj.ctxRader.fill();
+
+                if (tekiPlayerObj.displayName === 'anonymous') {
+
+                    gameObj.ctxRader.strokeStyle = 'rgba(250, 250, 250, ' + toumeido + ')';
+                    gameObj.ctxRader.fillStyle = 'rgba(250, 250, 250, ' + toumeido + ')';
+                    gameObj.ctxRader.beginPath();
+                    gameObj.ctxRader.moveTo(distanceObj.drawX, distanceObj.drawY);
+                    gameObj.ctxRader.lineTo(distanceObj.drawX + 20, distanceObj.drawY - 20);
+                    gameObj.ctxRader.lineTo(distanceObj.drawX + 20 + 40, distanceObj.drawY - 20);
+                    gameObj.ctxRader.stroke();
+
+                    gameObj.ctxRader.font = '8px Arial';
+                    gameObj.ctxRader.fillText('anonymous', distanceObj.drawX + 20, distanceObj.drawY - 20 - 1);
+                } else if (tekiPlayerObj.displayName) {
+
+                    gameObj.ctxRader.strokeStyle = 'rgba(250, 250, 250, ' + toumeido + ')';
+                    gameObj.ctxRader.fillStyle = 'rgba(250, 250, 250, ' + toumeido + ')';
+                    gameObj.ctxRader.beginPath();
+                    gameObj.ctxRader.moveTo(distanceObj.drawX, distanceObj.drawY);
+                    gameObj.ctxRader.lineTo(distanceObj.drawX + 20, distanceObj.drawY - 20);
+                    gameObj.ctxRader.lineTo(distanceObj.drawX + 20 + 40, distanceObj.drawY - 20);
+                    gameObj.ctxRader.stroke();
+
+                    gameObj.ctxRader.font = '8px Arial';
+                    gameObj.ctxRader.fillText(tekiPlayerObj.displayName, distanceObj.drawX + 20, distanceObj.drawY - 20 - 1);
+                }
             }
         }
 
-        // 空気の描画
+        // アイテムの描画
     } catch (err) {
         _didIteratorError2 = true;
         _iteratorError2 = err;
@@ -5999,28 +6055,30 @@ function drawMap(gameObj) {
     var _iteratorError3 = undefined;
 
     try {
-        for (var _iterator3 = gameObj.airMap[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+        for (var _iterator3 = gameObj.itemsMap[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
             var _ref3 = _step3.value;
 
             var _ref4 = _slicedToArray(_ref3, 2);
 
-            var airKey = _ref4[0];
-            var airObj = _ref4[1];
+            var index = _ref4[0];
+            var item = _ref4[1];
 
 
-            var distanceObj = calculationBetweenTwoPoints(gameObj.myPlayerObj.x, gameObj.myPlayerObj.y, airObj.x, airObj.y, gameObj.fieldWidth, gameObj.fieldHeight, gameObj.raderCanvasWidth, gameObj.raderCanvasHeight);
+            var distanceObj = calculationBetweenTwoPoints(gameObj.myPlayerObj.x, gameObj.myPlayerObj.y, item.x, item.y, gameObj.fieldWidth, gameObj.fieldHeight, gameObj.raderCanvasWidth, gameObj.raderCanvasHeight);
 
             if (distanceObj.distanceX <= gameObj.raderCanvasWidth / 2 && distanceObj.distanceY <= gameObj.raderCanvasHeight / 2) {
 
                 var _degreeDiff = calcDegreeDiffFromRadar(gameObj.deg, distanceObj.degree);
                 var _toumeido = calcOpacity(_degreeDiff);
 
-                gameObj.ctxRader.fillStyle = 'rgb(0, 220, 255, ' + _toumeido + ')';
+                gameObj.ctxRader.fillStyle = 'rgba(255, 165, 0, ' + _toumeido + ')';
                 gameObj.ctxRader.beginPath();
-                gameObj.ctxRader.arc(distanceObj.drawX, distanceObj.drawY, gameObj.airRadius, 0, Math.PI * 2, true);
+                gameObj.ctxRader.arc(distanceObj.drawX, distanceObj.drawY, gameObj.itemRadius, 0, Math.PI * 2, true);
                 gameObj.ctxRader.fill();
             }
         }
+
+        // 空気の描画
     } catch (err) {
         _didIteratorError3 = true;
         _iteratorError3 = err;
@@ -6032,6 +6090,48 @@ function drawMap(gameObj) {
         } finally {
             if (_didIteratorError3) {
                 throw _iteratorError3;
+            }
+        }
+    }
+
+    var _iteratorNormalCompletion4 = true;
+    var _didIteratorError4 = false;
+    var _iteratorError4 = undefined;
+
+    try {
+        for (var _iterator4 = gameObj.airMap[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+            var _ref5 = _step4.value;
+
+            var _ref6 = _slicedToArray(_ref5, 2);
+
+            var airKey = _ref6[0];
+            var airObj = _ref6[1];
+
+
+            var distanceObj = calculationBetweenTwoPoints(gameObj.myPlayerObj.x, gameObj.myPlayerObj.y, airObj.x, airObj.y, gameObj.fieldWidth, gameObj.fieldHeight, gameObj.raderCanvasWidth, gameObj.raderCanvasHeight);
+
+            if (distanceObj.distanceX <= gameObj.raderCanvasWidth / 2 && distanceObj.distanceY <= gameObj.raderCanvasHeight / 2) {
+
+                var _degreeDiff2 = calcDegreeDiffFromRadar(gameObj.deg, distanceObj.degree);
+                var _toumeido2 = calcOpacity(_degreeDiff2);
+
+                gameObj.ctxRader.fillStyle = 'rgb(0, 220, 255, ' + _toumeido2 + ')';
+                gameObj.ctxRader.beginPath();
+                gameObj.ctxRader.arc(distanceObj.drawX, distanceObj.drawY, gameObj.airRadius, 0, Math.PI * 2, true);
+                gameObj.ctxRader.fill();
+            }
+        }
+    } catch (err) {
+        _didIteratorError4 = true;
+        _iteratorError4 = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion4 && _iterator4.return) {
+                _iterator4.return();
+            }
+        } finally {
+            if (_didIteratorError4) {
+                throw _iteratorError4;
             }
         }
     }

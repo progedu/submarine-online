@@ -10,6 +10,7 @@ const gameObj = {
     itemRadius: 4,
     airRadius: 5,
     deg: 0,
+    counter: 0,
     rotationDegreeByDirection: {
         'left': 0,
         'up': 270,
@@ -63,6 +64,8 @@ function ticker() {
     gameObj.ctxScore.clearRect(0, 0, gameObj.scoreCanvasWidth, gameObj.scoreCanvasHeight); // scoreCanvas もまっさら 
     drawAirTimer(gameObj.ctxScore, gameObj.myPlayerObj.airTime);
     drawMissiles(gameObj.ctxScore, gameObj.myPlayerObj.missilesMany);
+
+    gameObj.counter = (gameObj.counter + 1) % 10000;
 }
 setInterval(ticker, 33);
 
@@ -173,6 +176,81 @@ function getRadian(kakudo) {
 }
 
 function drawMap(gameObj) {
+
+    // 敵プレイヤーと NPC の描画
+    for (let [key, tekiPlayerObj] of gameObj.playersMap) {
+        if (key === gameObj.myPlayerObj.playerId) { continue; } // 自分は描画しない
+
+        const distanceObj = calculationBetweenTwoPoints(
+            gameObj.myPlayerObj.x, gameObj.myPlayerObj.y,
+            tekiPlayerObj.x, tekiPlayerObj.y,
+            gameObj.fieldWidth, gameObj.fieldHeight,
+            gameObj.raderCanvasWidth, gameObj.raderCanvasHeight
+        );
+
+        if (distanceObj.distanceX <= (gameObj.raderCanvasWidth / 2) && distanceObj.distanceY <= (gameObj.raderCanvasHeight / 2)) {
+
+            if (tekiPlayerObj.isAlive === false) {
+                continue;
+            }
+
+            const degreeDiff = calcDegreeDiffFromRadar(gameObj.deg, distanceObj.degree);
+            const toumeido = calcOpacity(degreeDiff);
+
+            const drawRadius = gameObj.counter % 12 + 2 + 12;
+            const clearRadius = drawRadius - 2;
+            const drawRadius2 = gameObj.counter % 12 + 2;
+            const clearRadius2 = drawRadius2 - 2;
+
+            gameObj.ctxRader.fillStyle = `rgba(0, 0, 255, ${toumeido})`;
+            gameObj.ctxRader.beginPath();
+            gameObj.ctxRader.arc(distanceObj.drawX, distanceObj.drawY, drawRadius, 0, Math.PI * 2, true);
+            gameObj.ctxRader.fill();
+
+            gameObj.ctxRader.fillStyle = `rgb(0, 20, 50)`;
+            gameObj.ctxRader.beginPath();
+            gameObj.ctxRader.arc(distanceObj.drawX, distanceObj.drawY, clearRadius, 0, Math.PI * 2, true);
+            gameObj.ctxRader.fill();
+
+            gameObj.ctxRader.fillStyle = `rgba(0, 0, 255, ${toumeido})`;
+            gameObj.ctxRader.beginPath();
+            gameObj.ctxRader.arc(distanceObj.drawX, distanceObj.drawY, drawRadius2, 0, Math.PI * 2, true);
+            gameObj.ctxRader.fill();
+
+            gameObj.ctxRader.fillStyle = `rgb(0, 20, 50)`;
+            gameObj.ctxRader.beginPath();
+            gameObj.ctxRader.arc(distanceObj.drawX, distanceObj.drawY, clearRadius2, 0, Math.PI * 2, true);
+            gameObj.ctxRader.fill();
+
+            if (tekiPlayerObj.displayName === 'anonymous') {
+
+                gameObj.ctxRader.strokeStyle = `rgba(250, 250, 250, ${toumeido})`;
+                gameObj.ctxRader.fillStyle = `rgba(250, 250, 250, ${toumeido})`;
+                gameObj.ctxRader.beginPath();
+                gameObj.ctxRader.moveTo(distanceObj.drawX, distanceObj.drawY);
+                gameObj.ctxRader.lineTo(distanceObj.drawX + 20, distanceObj.drawY - 20);
+                gameObj.ctxRader.lineTo(distanceObj.drawX + 20 + 40, distanceObj.drawY - 20);
+                gameObj.ctxRader.stroke();
+
+                gameObj.ctxRader.font = '8px Arial';
+                gameObj.ctxRader.fillText('anonymous', distanceObj.drawX + 20, distanceObj.drawY - 20 - 1);
+
+            } else if (tekiPlayerObj.displayName) {
+
+                gameObj.ctxRader.strokeStyle = `rgba(250, 250, 250, ${toumeido})`;
+                gameObj.ctxRader.fillStyle = `rgba(250, 250, 250, ${toumeido})`;
+                gameObj.ctxRader.beginPath();
+                gameObj.ctxRader.moveTo(distanceObj.drawX, distanceObj.drawY);
+                gameObj.ctxRader.lineTo(distanceObj.drawX + 20, distanceObj.drawY - 20);
+                gameObj.ctxRader.lineTo(distanceObj.drawX + 20 + 40, distanceObj.drawY - 20);
+                gameObj.ctxRader.stroke();
+
+                gameObj.ctxRader.font = '8px Arial';
+                gameObj.ctxRader.fillText(tekiPlayerObj.displayName, distanceObj.drawX + 20, distanceObj.drawY - 20 - 1);
+
+            }
+        }
+    }
 
     // アイテムの描画
     for (let [index, item] of gameObj.itemsMap) {
