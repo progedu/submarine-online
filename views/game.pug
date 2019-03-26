@@ -1,0 +1,7 @@
+extends layout
+
+block content
+  canvas#rader
+  canvas#score
+  h3 #{displayName}
+  script#main(src="/javascripts/index/bundle.js", data-displayName=`${displayName}`, data-thumbUrl=`${thumbUrl}`, data-ipAddress=`${ipAddress}`)

@@ -1,0 +1,14 @@
+body {
+    font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+    text-align: center;
+}
+
+canvas#rader {
+    border-radius: 50px;
+    background-color: rgba(00, 20, 50, 1.0);
+}
+
+canvas#score {
+    border-radius: 20px;
+    background-color: rgba(250, 250, 250, 1.0);
+}
